@@ -1,25 +1,52 @@
-import pytest
 from pro_filer.actions.main_actions import show_preview
+import pytest
 
-def create_context(files, dirs):
-    return {
-        "all_files": files,
-        "all_dirs": dirs,
-    }
+mock = str([
+    "src/__init__.py",
+    "src/app.py",
+    "src/app.py",
+    "src/app.py",
+    "src/app.py"
+])
 
-def test_show_preview_response_with_valid_context(capsys):
-    context = create_context(
-        ["src/__init__.py", "src/app.py", "src/utils/__init__.py"],
-        ["src", "src/utils"],
-    )
+
+@pytest.mark.parametrize("context, expect", [
+    ({"all_files": [], "all_dirs": []}, "Found 0 files and 0 directories\n"),
+    ({
+        "all_files": [
+            "src/__init__.py",
+            "src/app.py",
+            "src/utils/__init__.py",
+        ],
+        "all_dirs": ["src", "src/utils"],
+    }, """Found 3 files and 2 directories
+First 5 files: ['src/__init__.py', 'src/app.py', 'src/utils/__init__.py']
+First 5 directories: ['src', 'src/utils']\n"""),
+    ({
+        "all_files": [
+            "src/__init__.py",
+            "src/app.py",
+            "src/app.py",
+            "src/app.py",
+            "src/app.py",
+            "src/utils/__init__.py",
+        ],
+        "all_dirs": ["src", "src/utils"],
+    }, f"""Found 6 files and 2 directories
+First 5 files: {mock}
+First 5 directories: ['src', 'src/utils']\n"""),
+])
+def test_show_preview_response_ok(context, expect, capsys):
     show_preview(context)
     captured = capsys.readouterr()
+    assert captured.out == expect
 
-    expected_output = """
-Found 3 files and 2 directories
-First 5 files: ['src/__init__.py', 'src/app.py', 'src/utils/__init__.py']
-First 5 directories: ['src', 'src/utils']
-    """
 
-    # Use strip() para remover espaços em branco e quebras de linha extras
-    assert captured.out.strip() == expected_output.strip()
+@pytest.mark.parametrize("context2, expect", [
+    ({"all_dirs": []}, KeyError),
+    ({"all_files": []}, KeyError),
+    ({}, KeyError),
+])
+def test_show_preview_response_fail(context2, expect):
+    with pytest.raises(expect):
+        show_preview(context2)

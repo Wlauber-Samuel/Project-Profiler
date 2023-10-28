@@ -1,13 +1,16 @@
 import heapq
 
+
 def len_path_file(path):
     return len(path.split("/"))
+
 
 def show_deepest_file(context):
     if not context["all_files"]:
         print("No files found")
     else:
-        deepest_file = heapq.nlargest(1, context["all_files"], key=len_path_file)
+        deepest_file = heapq.nlargest(
+            1, context["all_files"], key=len_path_file)
         print(f"Deepest file: {deepest_file[0]}")
 
 
